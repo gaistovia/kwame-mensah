@@ -1,0 +1,577 @@
+/* ==========================================================================
+   PHASE 2 — CINEMATIC ENHANCEMENT LAYER
+   Purely additive: does not touch content, layout structure, typography
+   scale, color tokens or responsive breakpoints defined in style.css.
+   Everything here elevates motion, depth and atmosphere only.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce){
+  .ambient-bg, .hero-rays, .hero-noise, .cursor, .loader-particles, .loader-noise,
+  .sparkline, .stat-burst, .testimonial-avatar{ display:none !important; }
+  .chapter-enter-target{ opacity:1 !important; transform:none !important; filter:none !important; clip-path:none !important; }
+}
+
+/* ---------------------------------------------------------------------
+   0. Custom cursor pointer suppression (fine pointers only, set via JS)
+--------------------------------------------------------------------- */
+html.has-custom-cursor, html.has-custom-cursor *{ cursor:none !important; }
+
+.cursor{
+  position:fixed; top:0; left:0; z-index:70; pointer-events:none;
+  transform:translate(-50%,-50%);
+  opacity:0; transition:opacity .3s ease;
+}
+.cursor.is-visible{ opacity:1; }
+.cursor-dot{
+  position:absolute; top:0; left:0; width:6px; height:6px; border-radius:50%;
+  background:var(--gold-bright,#E4C083); transform:translate(-50%,-50%);
+  transition:opacity .2s ease, background .3s ease;
+}
+.cursor-ring{
+  position:absolute; top:0; left:0; width:40px; height:40px; border-radius:50%;
+  border:1px solid rgba(243,241,235,.5);
+  transform:translate(-50%,-50%);
+  display:flex; align-items:center; justify-content:center;
+  transition:width .35s var(--ease-out,cubic-bezier(.16,1,.3,1)), height .35s var(--ease-out,cubic-bezier(.16,1,.3,1)),
+             border-color .35s ease, background .35s ease;
+}
+.cursor-ring-label{
+  font-family:var(--font-mono,monospace); font-size:10px; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--linen,#F3F1EB); opacity:0; transition:opacity .25s ease;
+}
+.cursor.state-view .cursor-ring{ width:78px; height:78px; border-color:var(--emerald-bright,#1FD696); background:rgba(20,168,118,.12); }
+.cursor.state-view .cursor-ring-label{ opacity:1; }
+.cursor.state-link .cursor-ring{ width:54px; height:54px; border-color:var(--gold-bright,#E4C083); background:rgba(201,165,103,.1); }
+.cursor.state-drag .cursor-dot{ opacity:0; }
+@media (max-width:900px), (pointer:coarse){ .cursor{ display:none; } }
+
+/* ---------------------------------------------------------------------
+   1. Ambient living background (fixed, behind transparent sections only)
+--------------------------------------------------------------------- */
+.ambient-bg{
+  position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none;
+}
+.ambient-blob{
+  position:absolute; border-radius:50%; filter:blur(90px); opacity:.28;
+  will-change:transform;
+}
+.ambient-blob.b1{ width:46vw; height:46vw; left:-10%; top:0%; background:radial-gradient(circle, var(--emerald,#14A876), transparent 70%); animation:driftA 26s ease-in-out infinite; }
+.ambient-blob.b2{ width:38vw; height:38vw; right:-8%; top:32%; background:radial-gradient(circle, var(--gold,#C9A567), transparent 70%); animation:driftB 32s ease-in-out infinite; }
+.ambient-blob.b3{ width:34vw; height:34vw; left:18%; bottom:-6%; background:radial-gradient(circle, var(--emerald,#14A876), transparent 72%); opacity:.18; animation:driftC 38s ease-in-out infinite; }
+
+@keyframes driftA{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(6vw,8vh) scale(1.15);} }
+@keyframes driftB{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(-7vw,-6vh) scale(1.1);} }
+@keyframes driftC{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(4vw,-9vh) scale(1.2);} }
+
+.ambient-stars{ position:absolute; inset:0; }
+.ambient-star{
+  position:absolute; width:2px; height:2px; border-radius:50%; background:var(--linen,#F3F1EB);
+  opacity:.25; animation:twinkle linear infinite;
+}
+@keyframes twinkle{ 0%,100%{ opacity:.06; } 50%{ opacity:.5; } }
+
+.ambient-noise{
+  position:absolute; inset:-100px; opacity:.035; mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:180px 180px;
+  animation:noiseShift 1.4s steps(4) infinite;
+}
+@keyframes noiseShift{
+  0%{ transform:translate(0,0); } 25%{ transform:translate(-2%,1%); }
+  50%{ transform:translate(1%,-2%); } 75%{ transform:translate(-1%,2%); } 100%{ transform:translate(0,0); }
+}
+
+/* ---------------------------------------------------------------------
+   2. Hero — light rays, grain, glass sweep, depth layers
+--------------------------------------------------------------------- */
+.hero-rays{
+  position:absolute; inset:-20%; z-index:1; pointer-events:none;
+  background:conic-gradient(from 0deg at 50% 40%,
+    transparent 0deg, rgba(228,192,131,.10) 8deg, transparent 20deg,
+    transparent 160deg, rgba(31,214,150,.08) 172deg, transparent 190deg,
+    transparent 340deg, rgba(228,192,131,.06) 352deg, transparent 360deg);
+  mix-blend-mode:screen;
+  animation:raysRotate 60s linear infinite;
+  opacity:.8;
+}
+@keyframes raysRotate{ to{ transform:rotate(360deg); } }
+
+.hero-noise{
+  position:absolute; inset:0; z-index:1; opacity:.05; mix-blend-mode:overlay; pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:160px 160px;
+}
+
+.hero-glass-sweep{
+  position:absolute; inset:0; z-index:2; pointer-events:none; overflow:hidden;
+}
+.hero-glass-sweep::after{
+  content:''; position:absolute; top:0; bottom:0; left:-40%; width:26%;
+  background:linear-gradient(100deg, transparent, rgba(255,255,255,.10), transparent);
+  transform:skewX(-14deg);
+  animation:glassSweep 7s ease-in-out infinite;
+  animation-delay:1.2s;
+}
+@keyframes glassSweep{
+  0%{ left:-40%; opacity:0; } 8%{ opacity:.8; } 32%{ left:120%; opacity:0; } 100%{ left:120%; opacity:0; }
+}
+
+/* hero image gets an initial blur-to-focus cinematic wake-up, layered on top of style.css's own scale treatment */
+.hero-img{ filter:grayscale(35%) contrast(1.08) brightness(.82) blur(0px); }
+.hero-img.cinematic-wake{
+  animation:heroWake 2.4s var(--ease-out,cubic-bezier(.16,1,.3,1)) both;
+}
+@keyframes heroWake{
+  0%{ filter:grayscale(60%) contrast(1.1) brightness(.55) blur(18px); }
+  100%{ filter:grayscale(35%) contrast(1.08) brightness(.82) blur(0px); }
+}
+
+/* ---------------------------------------------------------------------
+   3. Text split reveal (words / chars injected by JS)
+--------------------------------------------------------------------- */
+.split-word, .split-char{ display:inline-block; overflow:hidden; vertical-align:top; }
+.split-word-inner, .split-char-inner{
+  display:inline-block; transform:translateY(112%) rotate(4deg);
+  transition:transform 1s cubic-bezier(.22,1,.36,1);
+  transition-delay:calc(var(--i,0) * 38ms);
+}
+.split-ready.split-in .split-word-inner,
+.split-ready.split-in .split-char-inner{ transform:translateY(0) rotate(0deg); }
+
+/* gradient sheen sweeping across headline once revealed */
+.hero-headline .line{ position:relative; }
+.hero-headline.gradient-sheen .line::after{
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(100deg, transparent 20%, rgba(228,192,131,.55) 45%, transparent 70%);
+  background-size:250% 100%; background-position:150% 0; mix-blend-mode:overlay;
+  animation:headlineSheen 2.6s ease-out 1;
+  animation-delay:1.4s;
+}
+@keyframes headlineSheen{ 0%{ background-position:150% 0; } 100%{ background-position:-50% 0; } }
+
+/* ---------------------------------------------------------------------
+   4. Image reveal variants (container gets data-reveal, JS toggles .revealed)
+--------------------------------------------------------------------- */
+[data-reveal] img{ will-change:transform, filter, clip-path; }
+
+[data-reveal="mask"] img{ clip-path:inset(0 0 100% 0); transition:clip-path 1.1s cubic-bezier(.22,1,.36,1); }
+[data-reveal="mask"].revealed img{ clip-path:inset(0 0 0% 0); }
+
+[data-reveal="blur"] img{ filter:blur(20px) brightness(.55) grayscale(40%); transform:scale(1.08); transition:filter 1.3s ease, transform 1.3s cubic-bezier(.22,1,.36,1); }
+[data-reveal="blur"].revealed img{ filter:blur(0) brightness(1) grayscale(0%); transform:scale(1); }
+
+[data-reveal="scale"] img{ transform:scale(1.35); transition:transform 1.4s cubic-bezier(.22,1,.36,1); }
+[data-reveal="scale"].revealed img{ transform:scale(1); }
+
+[data-reveal="rotate"] img{ transform:perspective(1000px) rotateY(22deg) scale(1.12); transition:transform 1.2s cubic-bezier(.22,1,.36,1); }
+[data-reveal="rotate"].revealed img{ transform:perspective(1000px) rotateY(0deg) scale(1); }
+
+[data-reveal="sweep"]{ position:relative; }
+[data-reveal="sweep"] img{ transform:scale(1.06); transition:transform 1.2s cubic-bezier(.22,1,.36,1); }
+[data-reveal="sweep"].revealed img{ transform:scale(1); }
+[data-reveal="sweep"]::after{
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background:linear-gradient(100deg, transparent 30%, rgba(255,255,255,.55) 48%, transparent 65%);
+  transform:translateX(-120%) skewX(-12deg);
+}
+[data-reveal="sweep"].revealed::after{ animation:imgSweep 1.1s cubic-bezier(.3,.8,.3,1) .15s 1; }
+@keyframes imgSweep{ to{ transform:translateX(160%) skewX(-12deg); } }
+
+/* ---------------------------------------------------------------------
+   5. Section-level entrance per chapter (distinct per chapter, no two alike)
+--------------------------------------------------------------------- */
+.chapter-enter-target{ transition:opacity 1.1s var(--ease-out,cubic-bezier(.16,1,.3,1)), transform 1.1s var(--ease-out,cubic-bezier(.16,1,.3,1)), filter 1.1s var(--ease-out,cubic-bezier(.16,1,.3,1)), clip-path 1.1s var(--ease-out,cubic-bezier(.16,1,.3,1)); }
+
+.who.chapter-enter-target{ clip-path:inset(0 0 6% 0); opacity:0; }
+.who.chapter-enter-target.chapter-in{ clip-path:inset(0 0 0% 0); opacity:1; }
+
+.journey.chapter-enter-target{ opacity:0; transform:scale(.965) translateY(24px); }
+.journey.chapter-enter-target.chapter-in{ opacity:1; transform:scale(1) translateY(0); }
+
+.expertise.chapter-enter-target{ opacity:0; transform:scale(.94); }
+.expertise.chapter-enter-target.chapter-in{ opacity:1; transform:scale(1); }
+
+.achievements.chapter-enter-target{ opacity:0; filter:blur(14px); }
+.achievements.chapter-enter-target.chapter-in{ opacity:1; filter:blur(0); }
+
+.process.chapter-enter-target{ opacity:0; transform:perspective(1200px) rotateX(7deg) translateY(30px); }
+.process.chapter-enter-target.chapter-in{ opacity:1; transform:perspective(1200px) rotateX(0) translateY(0); }
+
+.projects.chapter-enter-target{ opacity:0; filter:blur(6px); transform:translateY(18px); }
+.projects.chapter-enter-target.chapter-in{ opacity:1; filter:blur(0); transform:translateY(0); }
+
+.testimonials.chapter-enter-target{ opacity:0; clip-path:inset(0 100% 0 0); }
+.testimonials.chapter-enter-target.chapter-in{ opacity:1; clip-path:inset(0 0% 0 0); }
+
+.why.chapter-enter-target{ opacity:0; transform:translateY(26px); }
+.why.chapter-enter-target.chapter-in{ opacity:1; transform:translateY(0); }
+
+.contact.chapter-enter-target{ opacity:0; transform:scale(.97); }
+.contact.chapter-enter-target.chapter-in{ opacity:1; transform:scale(1); }
+.contact.chapter-in .contact-bloom{ opacity:1; }
+
+/* ---------------------------------------------------------------------
+   6. Magnetic buttons — ripple, animated border, light sweep
+--------------------------------------------------------------------- */
+.btn{ position:relative; overflow:hidden; isolation:isolate; }
+.btn::before{
+  content:''; position:absolute; inset:-1px; z-index:-1; border-radius:inherit;
+  background:conic-gradient(from var(--ang,0deg), transparent 0%, var(--gold,#C9A567) 8%, transparent 22%, transparent 78%, var(--emerald,#14A876) 92%, transparent 100%);
+  opacity:0; transition:opacity .4s ease;
+}
+.btn-ghost::before{ animation:btnBorderSpin 4s linear infinite; }
+.btn:hover::before{ opacity:.65; }
+@keyframes btnBorderSpin{ to{ --ang:360deg; } }
+@property --ang{ syntax:'<angle>'; inherits:false; initial-value:0deg; }
+
+.btn::after{
+  content:''; position:absolute; top:0; bottom:0; left:-60%; width:40%;
+  background:linear-gradient(100deg, transparent, rgba(255,255,255,.35), transparent);
+  transform:skewX(-16deg);
+  transition:left .7s cubic-bezier(.3,.8,.3,1);
+}
+.btn:hover::after{ left:130%; }
+
+.btn-ripple{
+  position:absolute; border-radius:50%; background:rgba(255,255,255,.45);
+  transform:scale(0); opacity:.6; pointer-events:none;
+  animation:rippleOut .7s ease-out forwards;
+}
+@keyframes rippleOut{ to{ transform:scale(1); opacity:0; } }
+
+/* ---------------------------------------------------------------------
+   7. Card cursor-follow sheen (JS sets --mx/--my percentages)
+--------------------------------------------------------------------- */
+.tilt-card{ position:relative; isolation:isolate; }
+.tilt-card::before{
+  content:''; position:absolute; inset:0; z-index:1; pointer-events:none; border-radius:inherit;
+  background:radial-gradient(320px circle at var(--mx,50%) var(--my,50%), rgba(255,255,255,.10), transparent 60%);
+  opacity:0; transition:opacity .4s ease;
+}
+.tilt-card:hover::before{ opacity:1; }
+.tilt-card::after{
+  content:''; position:absolute; inset:0; z-index:0; pointer-events:none; border-radius:inherit;
+  box-shadow:0 30px 60px -20px rgba(0,0,0,.55);
+  opacity:0; transition:opacity .5s ease;
+}
+.tilt-card:hover::after{ opacity:1; }
+
+/* ---------------------------------------------------------------------
+   8. Timeline — scroll-linked fill + node pulse burst
+--------------------------------------------------------------------- */
+.timeline{ position:relative; }
+.timeline-fill{
+  position:absolute; left:5px; top:8px; width:1px; height:0%;
+  background:linear-gradient(180deg, var(--emerald-bright,#1FD696), var(--gold,#C9A567));
+  box-shadow:0 0 10px 1px rgba(20,168,118,.6);
+  transition:height .1s linear;
+}
+.timeline-dot.pulse::before{
+  content:''; position:absolute; inset:-8px; border-radius:50%;
+  border:1px solid var(--emerald-bright,#1FD696);
+  animation:dotBurst .8s ease-out forwards;
+}
+@keyframes dotBurst{ 0%{ transform:scale(.4); opacity:.9; } 100%{ transform:scale(2.2); opacity:0; } }
+
+/* ---------------------------------------------------------------------
+   9. Stats — glow pulse, drawn underline, particle burst
+--------------------------------------------------------------------- */
+.stat{ position:relative; }
+.stat-num.counting{ text-shadow:0 0 24px rgba(31,214,150,.35); }
+.stat-underline{
+  display:block; height:2px; width:0%; margin-top:10px;
+  background:linear-gradient(90deg, var(--emerald,#14A876), var(--gold,#C9A567));
+  transition:width 1s cubic-bezier(.22,1,.36,1);
+}
+.stat.counted .stat-underline{ width:64px; }
+.stat-burst{ position:absolute; left:0; top:0; width:6px; height:6px; pointer-events:none; }
+.stat-burst span{
+  position:absolute; left:0; top:0; width:4px; height:4px; border-radius:50%;
+  background:var(--gold-bright,#E4C083);
+  animation:burstFly .7s ease-out forwards;
+}
+@keyframes burstFly{
+  to{ transform:translate(var(--bx,40px), var(--by,-30px)) scale(0); opacity:0; }
+}
+
+/* ---------------------------------------------------------------------
+   10. Testimonials — monogram avatar + giant quote mark
+--------------------------------------------------------------------- */
+.testimonial-card{ position:relative; }
+.testimonial-card::before{
+  content:'\201C'; position:absolute; top:6px; left:24px; font-family:var(--font-display,serif);
+  font-size:90px; color:var(--gold,#C9A567); opacity:.16; line-height:1; pointer-events:none;
+}
+.testimonial-avatar{
+  width:44px; height:44px; border-radius:50%; margin:0 auto 20px;
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-mono,monospace); font-size:13px; letter-spacing:.04em;
+  color:var(--obsidian,#08090B);
+  background:linear-gradient(135deg, var(--gold-bright,#E4C083), var(--emerald-bright,#1FD696));
+  animation:avatarFloat 4.5s ease-in-out infinite;
+}
+@keyframes avatarFloat{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-6px); } }
+
+/* ---------------------------------------------------------------------
+   11. Contact — ambient bloom + floating light
+--------------------------------------------------------------------- */
+.contact{ position:relative; }
+.contact-bloom{
+  position:absolute; left:50%; top:20%; width:60vw; height:60vw; max-width:820px; max-height:820px;
+  transform:translate(-50%,-20%); border-radius:50%; pointer-events:none; z-index:0;
+  background:radial-gradient(circle, rgba(20,168,118,.16), transparent 65%);
+  opacity:0; transition:opacity 1.6s ease;
+  animation:bloomPulse 6s ease-in-out infinite;
+}
+@keyframes bloomPulse{ 0%,100%{ transform:translate(-50%,-20%) scale(1); } 50%{ transform:translate(-50%,-20%) scale(1.12); } }
+.contact-inner, .site-footer{ position:relative; z-index:1; }
+
+/* ---------------------------------------------------------------------
+   12. Loader redesign — logo morph, particle assembly, curtain wipe
+--------------------------------------------------------------------- */
+.loader{ overflow:hidden; }
+.loader-noise{
+  position:absolute; inset:0; opacity:.05; mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:160px 160px;
+}
+.loader-particles{ position:absolute; inset:0; pointer-events:none; }
+.loader-particles span{
+  position:absolute; width:2px; height:2px; border-radius:50%; background:var(--gold-bright,#E4C083);
+  opacity:0; animation:particleConverge 1.8s cubic-bezier(.22,1,.36,1) forwards;
+}
+@keyframes particleConverge{
+  0%{ opacity:0; transform:translate(var(--sx,0), var(--sy,0)) scale(1.6); }
+  15%{ opacity:1; }
+  100%{ opacity:0; transform:translate(0,0) scale(.4); }
+}
+.loader-mark-svg{ width:150px; height:auto; overflow:visible; }
+.loader-mark-path{
+  font-family:var(--font-display,serif); font-size:40px; letter-spacing:.06em;
+  fill:none; stroke:var(--linen,#F3F1EB); stroke-width:.6;
+  stroke-dasharray:220; stroke-dashoffset:220;
+  animation:markDraw 1.6s var(--ease-out,cubic-bezier(.16,1,.3,1)) forwards, markFill 1s ease forwards 1.3s;
+}
+@keyframes markDraw{ to{ stroke-dashoffset:0; } }
+@keyframes markFill{ to{ fill:var(--linen,#F3F1EB); } }
+
+.loader-curtain{
+  position:absolute; top:0; bottom:0; width:50%; background:var(--obsidian,#08090B); z-index:5;
+  transition:transform 1s cubic-bezier(.76,0,.24,1);
+}
+.loader-curtain-l{ left:0; transform-origin:left; }
+.loader-curtain-r{ right:0; transform-origin:right; }
+.loader.curtain-open .loader-curtain-l{ transform:translateX(-100%); }
+.loader.curtain-open .loader-curtain-r{ transform:translateX(100%); }
+.loader.curtain-open .loader-inner{ opacity:0; transition:opacity .3s ease; }
+
+/* ---------------------------------------------------------------------
+   13. Fine-tuning existing nav / hero-particles so new layers sit correctly
+--------------------------------------------------------------------- */
+.hero-particles span{ z-index:1; }
+.hero-content{ position:relative; z-index:3; }
+.scroll-cue{ z-index:3; }
+
+/* ==========================================================================
+   PHASE 3 — REFINEMENT PASS
+   UX/UI/motion audit response. Fixes real layout risks and gives every
+   section its own reveal identity so no two chapters move the same way.
+   Still purely additive — style.css and cinematic.css (Phase 2) untouched.
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------
+   0. Hard guarantees against layout shift / overlap while animating
+--------------------------------------------------------------------- */
+.reveal, .reveal-text, .timeline-item, .chapter-enter-target, [data-reveal] img{
+  backface-visibility:hidden;
+}
+.stat, .expertise-card, .project-card, .testimonial-card{ contain:layout paint; }
+
+/* ---------------------------------------------------------------------
+   1. Hero — spotlight, aurora, mouse parallax layer
+--------------------------------------------------------------------- */
+.hero-aurora{
+  position:absolute; inset:-15%; z-index:1; pointer-events:none; opacity:.55;
+  background:
+    radial-gradient(45% 55% at 20% 20%, rgba(20,168,118,.22), transparent 60%),
+    radial-gradient(40% 50% at 80% 30%, rgba(201,165,103,.18), transparent 60%),
+    radial-gradient(50% 60% at 50% 90%, rgba(20,168,118,.14), transparent 65%);
+  mix-blend-mode:screen;
+  animation:auroraDrift 22s ease-in-out infinite alternate;
+  filter:blur(6px);
+}
+@keyframes auroraDrift{
+  0%{ transform:translate(0,0) scale(1); }
+  100%{ transform:translate(3%, -4%) scale(1.08); }
+}
+.hero-spotlight{
+  position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:radial-gradient(420px circle at var(--sx,50%) var(--sy,35%), rgba(255,255,255,.10), transparent 62%);
+  opacity:0; transition:opacity .6s ease;
+  mix-blend-mode:soft-light;
+}
+.hero-spotlight.is-active{ opacity:1; }
+.hero-parallax-layer{ will-change:transform; }
+
+/* ---------------------------------------------------------------------
+   2. Image depth & glass treatment (applied broadly, not just on reveal)
+--------------------------------------------------------------------- */
+.visual-frame, .project-media, .why-visual, .ach-bg{
+  box-shadow:0 40px 80px -30px rgba(0,0,0,.6);
+}
+.visual-frame, .project-media, .why-visual{ position:relative; }
+.visual-frame::after, .project-media::after, .why-visual::after{
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background:linear-gradient(115deg, rgba(255,255,255,.10) 0%, transparent 22%, transparent 78%, rgba(255,255,255,.05) 100%);
+}
+
+/* ---------------------------------------------------------------------
+   3. Per-section reveal identity — item-level (overrides base .reveal
+      from style.css for elements within each named chapter). Equal or
+      higher specificity than style.css's own rules, loaded after it.
+--------------------------------------------------------------------- */
+
+/* HERO — depth-of-field: blurred rise into focus */
+.hero .reveal-text{
+  opacity:0; filter:blur(5px); transform:translateY(18px);
+  transition:opacity 1s var(--ease-out), filter 1s var(--ease-out), transform 1s var(--ease-out);
+}
+.hero .reveal-text.in{ opacity:1; filter:blur(0); transform:translateY(0); }
+
+/* WHO AM I — a quiet horizontal read-in, text focuses like a lens */
+.who .reveal{
+  opacity:0; filter:blur(6px); transform:translateX(-18px) translateY(0);
+  transition:opacity 1s var(--ease-out), filter 1s var(--ease-out), transform 1s var(--ease-out);
+}
+.who .reveal.in{ opacity:1; filter:blur(0); transform:translateX(0); }
+
+/* JOURNEY — intro copy settles with depth; timeline items alternate like a dolly move */
+.journey .chapter-intro .reveal{
+  opacity:0; transform:scale(.94) translateY(18px);
+  transition:opacity 1s var(--ease-out), transform 1s var(--ease-out);
+}
+.journey .chapter-intro .reveal.in{ opacity:1; transform:scale(1) translateY(0); }
+.journey > .chapter-marker{
+  opacity:0; transform:translateY(10px);
+  transition:opacity .8s var(--ease-out), transform .8s var(--ease-out);
+}
+.journey.chapter-in > .chapter-marker{ opacity:1; transform:translateY(0); }
+
+.timeline-item.reveal{
+  opacity:0; transform:translateX(-32px) scale(.97);
+  transition:opacity .9s var(--ease-out), transform .9s var(--ease-out);
+}
+.timeline-item:nth-child(even).reveal{ transform:translateX(32px) scale(.97); }
+.timeline-item.reveal.in{ opacity:1; transform:translateX(0) scale(1); }
+
+/* EXPERTISE — cards flip up out of perspective, staggered */
+.expertise-card.reveal{
+  opacity:0; transform:perspective(900px) rotateX(-16deg) translateY(26px);
+  transition:opacity .9s var(--ease-out), transform .9s var(--ease-out);
+  transition-delay:calc(var(--stagger-index,0) * 90ms);
+}
+.expertise-card.reveal.in{ opacity:1; transform:perspective(900px) rotateX(0) translateY(0); }
+
+/* ACHIEVEMENTS — copy mask-wipes up; stats pop with scale (celebration) */
+.achievements .chapter-intro .reveal{
+  opacity:0; clip-path:inset(0 0 100% 0);
+  transition:opacity .9s var(--ease-out), clip-path .9s var(--ease-out);
+}
+.achievements .chapter-intro .reveal.in{ opacity:1; clip-path:inset(0 0 0% 0); }
+.achievements > .chapter-marker{
+  opacity:0; transform:translateY(10px);
+  transition:opacity .8s var(--ease-out), transform .8s var(--ease-out);
+}
+.achievements.chapter-in > .chapter-marker{ opacity:1; transform:translateY(0); }
+
+.stat.reveal{
+  opacity:0; transform:scale(.72);
+  transition:opacity .7s cubic-bezier(.34,1.56,.64,1), transform .7s cubic-bezier(.34,1.56,.64,1);
+  transition-delay:calc(var(--stagger-index,0) * 110ms);
+}
+.stat.reveal.in{ opacity:1; transform:scale(1); }
+
+/* PROCESS — steps slide in with a slight carriage-return skew */
+.process-step.reveal{
+  opacity:0; transform:translateY(22px) skewY(2deg);
+  transition:opacity .9s var(--ease-out), transform .9s var(--ease-out);
+  transition-delay:calc(var(--stagger-index,0) * 80ms);
+}
+.process-step.reveal.in{ opacity:1; transform:translateY(0) skewY(0); }
+
+/* PROJECTS — mask reveal + rise, staggered per card */
+.project-card.reveal{
+  opacity:0; clip-path:inset(0 0 100% 0); transform:translateY(20px);
+  transition:opacity 1s var(--ease-out), clip-path 1s var(--ease-out), transform 1s var(--ease-out);
+  transition-delay:calc(var(--stagger-index,0) * 120ms);
+}
+.project-card.reveal.in{ opacity:1; clip-path:inset(0 0 0% 0); transform:translateY(0); }
+
+/* TESTIMONIALS — soft blur reveal for intro copy (cards handled by active/inactive states) */
+.testimonials .chapter-intro .reveal{
+  opacity:0; filter:blur(10px);
+  transition:opacity 1s ease, filter 1s ease;
+}
+.testimonials .chapter-intro .reveal.in{ opacity:1; filter:blur(0); }
+.testimonials > .chapter-marker{
+  opacity:0; transform:translateY(10px);
+  transition:opacity .8s var(--ease-out), transform .8s var(--ease-out);
+}
+.testimonials.chapter-in > .chapter-marker{ opacity:1; transform:translateY(0); }
+
+/* WHY HIRE ME — stagger slide from the left, like reading a checklist */
+.why .reveal{
+  opacity:0; transform:translateX(-24px);
+  transition:opacity .8s var(--ease-out), transform .8s var(--ease-out);
+}
+.why .reveal.in{ opacity:1; transform:translateX(0); }
+/* individual checklist lines cascade once the parent list is revealed */
+.why-list.reveal.in li{
+  animation:whyListLine .6s var(--ease-out) both;
+}
+.why-list.reveal.in li:nth-child(1){ animation-delay:.05s; }
+.why-list.reveal.in li:nth-child(2){ animation-delay:.15s; }
+.why-list.reveal.in li:nth-child(3){ animation-delay:.25s; }
+.why-list.reveal.in li:nth-child(4){ animation-delay:.35s; }
+@keyframes whyListLine{ from{ opacity:0; transform:translateX(-16px); } to{ opacity:1; transform:translateX(0); } }
+
+/* CONTACT — final scale-and-glow settle */
+.contact .reveal{
+  opacity:0; transform:scale(.95);
+  transition:opacity 1s var(--ease-out), transform 1s var(--ease-out);
+}
+.contact .reveal.in{ opacity:1; transform:scale(1); }
+
+/* ---------------------------------------------------------------------
+   4. Cursor — magnetic snap toward hovered target, click feedback
+--------------------------------------------------------------------- */
+.cursor.state-snap .cursor-ring{ transition:width .35s var(--ease-out), height .35s var(--ease-out), transform .25s var(--ease-out), border-color .35s ease, background .35s ease; }
+.cursor.is-clicking .cursor-dot{ transform:translate(-50%,-50%) scale(.5); }
+
+/* ---------------------------------------------------------------------
+   5. Buttons — depth + click feedback
+--------------------------------------------------------------------- */
+.btn:active{ transform:scale(.96); }
+.btn-ghost:hover{ box-shadow:0 10px 34px -14px rgba(201,165,103,.35); }
+
+/* ---------------------------------------------------------------------
+   6. Background — depth fog vignette + soft light beams
+--------------------------------------------------------------------- */
+.ambient-fog{
+  position:absolute; inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%, transparent 40%, rgba(8,9,11,.7) 100%);
+}
+.ambient-beam{
+  position:absolute; top:-20%; width:2px; height:140%; opacity:.05;
+  background:linear-gradient(180deg, transparent, var(--gold,#C9A567), transparent);
+  transform:rotate(12deg);
+}
+.ambient-beam.beam-2{ left:30%; background:linear-gradient(180deg, transparent, var(--emerald,#14A876), transparent); opacity:.04; transform:rotate(-10deg); }
+.ambient-beam.beam-1{ left:65%; }
+
+/* ---------------------------------------------------------------------
+   7. Responsive safety net — decorative-only layers never affect flow
+--------------------------------------------------------------------- */
+@media (max-width:720px){
+  .hero-aurora, .ambient-beam{ opacity:.35; }
+}
